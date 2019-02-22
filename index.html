@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>RbVer</title>
+  <style>
+    * { box-sizing: border-box }
+    body { max-width: 732px; margin: 0 auto; padding: 16px }
+    body { font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Helvetica, Arial, sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" }
+    h1, h3 { margin: 0; font-weight: normal }
+    input { flex: 1 } button { text-transform: uppercase }
+    input, button { padding: 8px; outline: 0 }
+    body { color: rgba(0,0,0,.8) }
+    ::selection { background-color: rgba(0,0,0,.1); color: black }
+    input, button { border: 1px solid }
+    input { margin-right: 8px }
+    body { position: relative }
+    aside { position: absolute; right: 100%; margin-top: -48px }
+    aside ul { margin: 0; padding: 0; list-style-type: none }
+    aside li { padding: 8px; text-align: right }
+    @media (max-width: 433px) {
+      aside { position: static; margin: 0 }
+      aside li { padding: 0 4px 4px; text-align: left }
+    }
+    #c,#a,#i { margin: 0; padding: 0; list-style-type: none }
+    #c,#a,#i { font-family: Iosevka, Consolas, monospace }
+    #c li,#a li,#i li { display: flex; padding: 8px 0 }
+    #c li a,
+    #a li a,
+    #i li a { flex: 1 }
+    #c li a::before { content: '::' }
+    #a li a::before { content: '.' }
+    #i li a::before { content: '#' }
+    #c li:hover,
+    #a li:hover,
+    #i li:hover { background-color: rgba(0,0,0,.1); color: black }
+    a { color: inherit; text-decoration: none }
+    a:hover { color: black; text-decoration: underline }
+  </style>
+</head>
+<body>
+  <base target="_blank">
+  <h1>RbVer</h1>
+  <div style="display: flex; margin: 8px 0 12px">
+    <input id="query" type="search" oninput="complete()" onchange="update()" autocomplete="off">
+    <button onclick="update()">search</button>
+  </div>
+  <p><a href="" id="doc"></a></p>
+  <aside id="list">
+    <ul></ul>
+  </aside>
+  <h3>Class Methods</h3>
+  <ul id="c"></ul>
+  <h3>Attrbutes</h3>
+  <ul id="a"></ul>
+  <h3>Instance Methods</h3>
+  <ul id="i"></ul>
+  <script>
+    var versions = null;
+    var input = document.querySelector('#query');
+    var list = document.querySelector('#list ul');
+    var doc = document.querySelector('#doc');
+    var completion = [];
+    var lis = {};
+    fetch('versions.json').then(r => r.json()).then(j => {
+      window.versions = j;
+      completion = Object.keys(j);
+      for (const str of completion) {
+        let li = document.createElement('li');
+        let a = document.createElement('a');
+        a.textContent = str;
+        a.onclick = () => { input.value = str; complete(); update() };
+        a.href = 'javascript:void(0)';
+        li.appendChild(a);
+        list.appendChild(li);
+        lis[str] = li;
+        lis[str].style.display = 'none';
+      }
+    });
+    async function complete() {
+      let count = 0;
+      if (input.value.trim().length < 1)
+        count = 5;
+      for (const str of completion) {
+        if (count < 5 && str.indexOf(input.value) > -1) {
+          lis[str].style.display = 'list-item';
+          count++;
+        } else {
+          lis[str].style.display = 'none';
+        }
+      }
+    }
+    var meta = ['c', 'a', 'i'];
+    var l = {};
+    for (const x of meta) l[x] = document.querySelector('#' + x);
+    function update() {
+      const data = window.versions[input.value];
+      for (const x of meta)
+        while (l[x].firstChild) l[x].removeChild(l[x].firstChild);
+      if (data) {
+        const path = input.value.toLowerCase().replace(/::/g, '/');
+        doc.href = 'https://devdocs.io/ruby~2.5/' + path;
+        doc.textContent = doc.href;
+        for (const x of meta) {
+          for (const [n, v] of Object.entries(data[x])) {
+            const li = document.createElement('li');
+            const name = document.createElement('a');
+            const ver = document.createElement('span');
+            name.textContent = n;
+            let last = encodeURIComponent(n).replace(/%/g, '-');
+            if (last[0] === '-') last = last.substring(1);
+            name.href = doc.href + '#method-' + x + '-' + last;
+            ver.textContent = String(v + 100).split('').join('.');
+            li.appendChild(name);
+            li.appendChild(ver);
+            l[x].appendChild(li);
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
