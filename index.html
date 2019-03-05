@@ -12,6 +12,7 @@
       Helvetica, Arial, sans-serif,
       "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" }
     h1, h3 { margin: 0; font-weight: normal }
+    h1 small { font-size: 14px }
     input { flex: 1 } button { text-transform: uppercase }
     input, button { padding: 8px; outline: 0 }
     body { color: rgba(0,0,0,.8) }
@@ -44,7 +45,7 @@
 </head>
 <body>
   <base target="_blank">
-  <h1>RbVer</h1>
+  <h1>RbVer <small><a href="./rbver.user.js">monkey script</a></small></h1>
   <div style="display: flex; margin: 8px 0 12px">
     <input id="query" type="search" oninput="complete()" onchange="update()" autocomplete="off">
     <button onclick="update()">search</button>

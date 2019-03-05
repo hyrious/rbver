@@ -23,7 +23,7 @@ Which means `93` is `ruby_1_9_3`, `160` is `ruby_2_6_0`, etc.
 I choose this way to store the number mainly because in ruby marshal numbers
 under 127 will only takes one byte to store. :p
 
-It seems that we can write a monkey script to https://ruby-doc.org to show
+~~It seems that~~ We can write a [monkey script](rbver.user.js) to https://ruby-doc.org to show
 the versions.
 
 ## Script
