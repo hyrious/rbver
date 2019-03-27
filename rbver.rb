@@ -56,7 +56,8 @@ rb.reverse_each { |text:, href:, sha:|
 Ancestors = {}
 def build_ancestors x={}, *n
   k = n.empty? ? 'Object' : n.join('::')
-  Ancestors[k] = x[:a]
+  k.slice!(/^(Class::|Module::Class::|Module::)/)
+  Ancestors[k] = x[:a].map(&:to_s)
   x[:s]&.each { |m, y| build_ancestors y, *n, m }
 end
 
@@ -64,10 +65,11 @@ end
 Versions = {}
 def build_versions x={}, *n
   k = n.empty? ? 'Object' : n.join('::')
+  k.slice!(/^(Class::|Module::Class::|Module::)/)
   o = (Versions[k] ||= { i: {}, c: {}, a: {}, _: @ver })
-  x[:i]&.each { |i| o[:i][i] ||= @ver }
-  x[:c]&.each { |c| o[:c][c] ||= @ver }
-  x[:i]&.grep(/^\w+=/) { |a| o[:a][a[0..-2]] ||= @ver }
+  x[:i]&.each { |i| o[:i][i.to_sym] ||= @ver }
+  x[:c]&.each { |c| o[:c][c.to_sym] ||= @ver }
+  x[:i]&.grep(/^\w+=/) { |a| o[:a][a[0..-2].to_sym] ||= @ver }
   x[:s]&.each { |m, y| build_versions y, *n, m }
 end
 

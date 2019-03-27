@@ -18,10 +18,6 @@ The structure of this file is:
 }
 ```
 
-> Problem: there are `Array` `Class::Array` `Module::Class::Array` `Module::Array`. wtf?
->
-> Hope to find some way to reduce it...
-
 The number followed by a method/attribute is the version of ruby - 100.
 Which means `93` is `ruby_1_9_3`, `160` is `ruby_2_6_0`, etc.
 I choose this way to store the number mainly because in ruby marshal numbers
