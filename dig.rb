@@ -1,0 +1,35 @@
+def dig x=Object, v={}
+  return if v.key? x
+  v[x] = 1
+  if x.kind_of? Module
+    # s: x::child-mod
+    # t: x::constants
+    # i: instance methods
+    # c: class methods
+    # a: ancestors
+    ret = {
+      :s => {}, :t => [], :a => x.ancestors.map(&:to_s),
+      :i => x.instance_methods(false),
+      :c => x.singleton_methods(false)
+    }
+    x.constants.each { |e|
+      begin
+        y = dig x.const_get(e), v
+        if y.nil?
+          ret[:t] << e
+        else
+          ret[:s][e] = y
+        end
+      rescue NameError
+      end
+    }
+    [:s, :t, :i, :c, :a].each { |e|
+      ret.delete e if ret[e].empty?
+    }
+    ret
+  end
+end
+
+open 'dig.ri', 'wb' do |f|
+  Marshal.dump dig, f
+end
