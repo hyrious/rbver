@@ -58,11 +58,18 @@
     a {
       color: inherit;
     }
+    #rbrb {
+      text-transform: capitalize;
+      cursor: pointer;
+      user-select: none;
+      -moz-user-select: none;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
   <base target="_blank">
-  <h1>Can I use <em>X</em> in ruby <b>Y</b>?</h1>
+  <h1>Can I use <em>X</em> in <span id="rbrb">ruby</span> <b>Y</b>?</h1>
   <div class="input"><input id="input" list="klassList" placeholder="Array"></div>
   <datalist id="klassList"></datalist>
   <section id="output">
@@ -74,53 +81,69 @@
   <script type="module">
     import Ky from 'https://cdn.jsdelivr.net/npm/ky/index.min.js';
     (async () => {
-      const versions = await Ky.get('versions.json').json();
-      const ancestors = await Ky.get('ancestors.json').json();
-      const input = document.getElementById('input');
-      const output = document.getElementById('output');
-      const klassList = document.getElementById('klassList');
-      for (const k in versions) {
-        const option = document.createElement('option');
-        option.value = k;
-        klassList.appendChild(option);
+      let versions = await Ky.get('versions.json').json();
+      let ancestors = await Ky.get('ancestors.json').json();
+      function $(id) {
+        return document.getElementById(id);
       }
+      const input = $('input');
+      const output = $('output');
+      const klassList = $('klassList');
       function toVersionString(int) {
-        return Array.from(String(int + 100)).join('.');
+        if ($('rbrb').textContent === 'ruby')
+          return Array.from(String(int + 100)).join('.');
+        else
+          return int;
       }
       function clearChild(x) {
-        while (x.firstChild) x.firstChild.remove()
+        while (x.firstChild) x.firstChild.remove();
+        return x;
       }
-      input.addEventListener('input', function(e) {
+      function elt(tag, attr, ...children) {
+        const e = Object.assign(document.createElement(tag, attr));
+        for (const c of children)
+          e.append(c);
+        return e;
+      }
+      function setup() {
+        clearChild(klassList);
+        for (const k in versions)
+          klassList.append(elt('option', null, k));
+      }
+      $('rbrb').addEventListener('click', async function(e) {
+        if (this.textContent === 'ruby') {
+          this.textContent = 'rgss';
+          versions = await Ky.get('rgss/versions.json').json();
+          ancestors = await Ky.get('rgss/ancestors.json').json();
+        } else {
+          this.textContent = 'ruby';
+          versions = await Ky.get('versions.json').json();
+          ancestors = await Ky.get('ancestors.json').json();
+        }
+        setup();
+        updateOutput();
+      });
+      setup();
+      function updateOutput(e) {
         e = versions[input.value];
         if (!e) return;
         console.log(e);
-        const _ = document.getElementById('_');
-        clearChild(_);
+        const _ = clearChild($('_'));
         const aa = ancestors[input.value];
-        const li = document.createElement('li');
-        const left = document.createElement('span');
-        left.textContent = aa ? aa.join(' \u2192 ') : '';
-        li.appendChild(left);
-        const right = document.createElement('span');
-        right.textContent = toVersionString(e._);
-        li.appendChild(right);
-        _.appendChild(li);
+        _.appendChild(elt('li', null,
+          elt('span', null, aa ? aa.join(' \u2192 ') : ''),
+          elt('span', null, toVersionString(e._))));
         for (const k of ('c a i'.split(' '))) {
-          const ul = document.getElementById(k);
-          clearChild(ul);
+          const ul = clearChild($(k));
           for (const [name, ver] of Object.entries(e[k])) {
-            const li = document.createElement('li');
-            const left = document.createElement('span');
             const prefix = { 'c': '::', 'a': '.', 'i': '#' }[k]
-            left.textContent = prefix + name;
-            li.appendChild(left);
-            const right = document.createElement('span');
-            right.textContent = toVersionString(ver);
-            li.appendChild(right);
-            ul.appendChild(li);
+            ul.appendChild(elt('li', null,
+              elt('span', null, prefix + name),
+              elt('span', null, toVersionString(ver))));
           }
         }
-      });
+      }
+      input.addEventListener('input', updateOutput);
     })();
   </script>
   <footer>
