@@ -80,18 +80,14 @@ Dir.glob('each/?.?.?.ri') do |f|
   build_versions a
 end
 
-open 'ancestors.ri', 'wb' do |f|
-  Marshal.dump Ancestors, f
+def make file, obj
+  open "#{file}.ri", 'wb' do |f|
+    Marshal.dump obj, f
+  end
+  open "#{file}.json", 'w' do |f|
+    f.write JSON.generate obj
+  end
 end
 
-open 'ancestors.json', 'w' do |f|
-  f.write JSON.generate Ancestors
-end
-
-open 'versions.ri', 'wb' do |f|
-  Marshal.dump Versions, f
-end
-
-open 'versions.json', 'w' do |f|
-  f.write JSON.generate Versions
-end
+make 'ancestors', Ancestors
+make 'versions', Versions
