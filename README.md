@@ -7,13 +7,13 @@ or [the marshal one](versions.ri).
 
 The structure of this file is:
 
-```json
+```ruby
 {
   "ClassName": {
     "i": { "instance_method1": 30 },
     "c": { "class_method1": 90 },
     "a": { "attribute1": 160 },
-    "_": 100, // which means the class itself
+    "_": 100, # _ means the class itself
   }
 }
 ```

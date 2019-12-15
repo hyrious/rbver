@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RbVer - Can I use ...</title>
+    <link rel="stylesheet" href="https://unpkg.com/modern-normalize">
+    <style>
+        :root {
+            font-family: Segoe UI, sans-serif;
+            line-height: 1.54;
+        }
+        a {
+            color: #369;
+            text-decoration: none;
+        }
+        h1 {
+            font-weight: normal;
+            font-size: 28px;
+            margin: 12px 21px;
+        }
+        h1 input {
+            border: 0;
+            border-bottom: 2px solid #000;
+            outline: none;
+            font-family: monospace;
+        }
+        h3 {
+            font-weight: normal;
+            font-size: 20px;
+            margin: 8px 21px;
+        }
+        p {
+            margin: 8px 21px 12px;
+        }
+        p a:not(:first-child)::before {
+            content: ' ';
+        }
+        header {
+            margin: 12px 21px;
+        }
+        .searching [data-ver]::after {
+            content: ' ' attr(data-ver);
+        }
+    </style>
+</head>
+<body>
+    <a href="https://github.com/hyrious/rbver" class="github-corner" aria-label="View source on GitHub" title="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#FD6C6C; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header>
+        <a href="whats-new.html">What's New</a>
+    </header>
+    <h1>Can I use <input id="search" placeholder="Hash#dig" autofocus> ?</h1>
+    <section id="output"></section>
+
+    <script type="module">
+        function $(sel) {
+            return document.querySelector(sel);
+        }
+        function elt(tag, attr={}, ...children) {
+            const e = document.createElement(tag);
+            if (Object(attr) instanceof HTMLElement ||
+                Object(attr) instanceof String)
+                children.unshift(attr);
+            else
+                for (const prop in attr)
+                    e.setAttribute(prop, attr[prop]);
+            for (const child of children)
+                e.append(child);
+            return e;
+        }
+        function strver(ver) {
+            return Array.from(String(ver + 100)).join('.');
+        }
+        function link(k, c, t, _) {
+            return `https://ruby-doc.org/core-${strver(_)}/${
+                k.replace(/::/g,"/")
+            }.html#method-${c}-${
+              encodeURIComponent(t.replace(/-/g,"-2D"))
+                .replace(/%/g,"-")
+                .replace(/^-/,"")
+            }`;
+        }
+        function show(e) {
+            if (!e) return;
+            e.style.display = '';
+        }
+        function hide(e) {
+            if (!e) return;
+            e.style.display = 'none';
+        }
+        function isSubseq(s1, s2) {
+            if (!s1) return true;
+            if (!s2) return false;
+            if (s1[s1.length - 1] === s2[s2.length - 1])
+                return isSubseq(s1.slice(0, -1), s2.slice(0, -1));
+            return isSubseq(s1, s2.slice(0, -1));
+        }
+        import Ky from "https://cdn.jsdelivr.net/npm/ky/index.min.js";
+        (async function() {
+            var json, versions, ancestors;
+            if ((json = localStorage.getItem('data'))) {
+                ({ versions, ancestors } = JSON.parse(json));
+            } else {
+                versions = await Ky.get("versions.json").json();
+                ancestors = await Ky.get("ancestors.json").json();
+                localStorage.setItem('data', JSON.stringify({ versions, ancestors }))
+            }
+            const input = $('#search');
+            const output = $('#output');
+            const dom = {};
+
+            for (const mod in versions) {
+                const { c, i, _ } = versions[mod];
+                const h3 = elt('h3',
+                    { 'data-ver': strver(_),
+                      title: strver(_) }, mod);
+                dom[mod] = { div: null, br: null, methods: { c: {}, i: {} } };
+                const p = elt('p');
+                for (const classMethod in c) {
+                    const a = elt('a',
+                        { href: link(mod, 'c', classMethod, c[classMethod]),
+                          'data-ver': strver(c[classMethod]),
+                          title: strver(c[classMethod]) },
+                        elt('code', `::${classMethod}`));
+                    dom[mod].methods.c[classMethod] = a;
+                    p.append(a);
+                }
+                if (Object.keys(c).length) p.append(dom[mod].br = elt('br'));
+                for (const instanceMethod in i) {
+                    const a = elt('a',
+                        { href: link(mod, 'i', instanceMethod, i[instanceMethod]),
+                          'data-ver': strver(i[instanceMethod]),
+                          title: strver(i[instanceMethod]) },
+                        elt('code', `#${instanceMethod}`));
+                    dom[mod].methods.i[instanceMethod] = a;
+                    p.append(a);
+                }
+                const div = elt('div', h3, p);
+                dom[mod].div = div;
+                output.append(div);
+            }
+
+            input.addEventListener('input', function() {
+                const text = this.value.trim();
+                if (text) {
+                    for (const mod in dom) {
+                        const { div, methods } = dom[mod];
+                        let flag = false;
+                        for (const classMethod in methods.c) {
+                            const fullName = `${mod}::${classMethod}`;
+                            if (isSubseq(text, fullName)) {
+                                show(methods.c[classMethod]);
+                                flag = true;
+                            } else
+                                hide(methods.c[classMethod]);
+                        }
+                        if (!flag)
+                            hide(dom[mod].br);
+                        else
+                            show(dom[mod].br);
+                        for (const instanceMethod in methods.i) {
+                            const fullName = `${mod}#${instanceMethod}`;
+                            if (isSubseq(text, fullName)) {
+                                show(methods.i[instanceMethod]);
+                                flag = true;
+                            } else
+                                hide(methods.i[instanceMethod]);
+                        }
+                        if (!flag && !isSubseq(text, mod))
+                            hide(div);
+                        else
+                            show(div);
+                    }
+                    output.classList.add('searching');
+                } else {
+                    for (const mod in dom) {
+                        const { div, methods } = dom[mod];
+                        for (const classMethod in methods.c)
+                            show(methods.c[classMethod]);
+                        show(dom[mod].br);
+                        for (const instanceMethod in methods.i)
+                            show(methods.i[instanceMethod]);
+                        show(div);
+                    }
+                    output.classList.remove('searching');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

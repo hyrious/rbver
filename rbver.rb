@@ -20,7 +20,7 @@ grbs = rbs.group_by { |e| e[:text][/Ruby \d\.\d\.\d/] }
 rb = grbs.values.map { |e| e.reject { |a| a[:text]['x64'] }
                             .sort_by { |a| a[:text] }[-1] }
 
-down = Down::Http.new { |http| http.via('127.0.0.1', 1080) }
+down = Down::Http.new # { |http| http.via('127.0.0.1', 1080) }
 percent = -> f { '%.02f%%' % (100 * f) }
 
 include FileUtils
@@ -28,29 +28,45 @@ TEMP_CACHE = 'temp.cache'
 Cache = File.exist?(TEMP_CACHE) ? (Marshal.load IO.binread TEMP_CACHE) : {}
 
 mkdir_p 'each'
+mkdir_p 'tmp'
 rb.reverse_each { |text:, href:, sha:|
   dist = "each/#{text[/\d\.\d\.\d/]}.ri"
   next if File.exist? dist
+  puts "WORKING ON #{dist}"
   unless Cache.key?(dist) && File.exist?(Cache[dist])
-    print "DOWNLOAD #{text} \e[s"
-    m = m
-    rb7z = down.download href,
-      content_length_proc: -> max { m = max.to_f },
-      progress_proc: -> i { print "\e[u", m ? percent[i / m] : i }
-    puts
-    rb7z.close
-    Cache[dist] = rb7z.path
-    open TEMP_CACHE, 'wb' do |f|
-      Marshal.dump Cache, f
+    path = "tmp/#{text[/\d\.\d\.\d/]}.7z"
+    unless File.exist?(path)
+      print "DOWNLOAD #{text} \e[s"
+      m = m
+      down.download href,
+        content_length_proc: -> max { m = max.to_f },
+        progress_proc: -> i { print "\e[u\e[K", m ? percent[i / m] : i },
+        destination: path
+      puts
+      Cache[dist] = path
+      open TEMP_CACHE, 'wb' do |f|
+        Marshal.dump Cache, f
+      end
     end
   end
-  puts "\e[s7z x #{Cache[dist]}"
+  puts "\e[K\e[s7z x #{Cache[dist]}"
   system '7z', 'x', Cache[dist], out: File::NULL
   folder = Dir['ruby*'][0]
-  system "#{folder}/bin/ruby.exe", 'dig.rb'
+  bin = "#{folder}/bin/ruby.exe"
+  flags = ['-W0']
+  help = `#{bin} --help`
+  if help.include?('--disable')
+    if help.include?('did_you_mean')
+      flags << '--disable=gems,did_you_mean,rubyopt'
+    else
+      flags << '--disable=gems,rubyopt'
+    end
+  end
+  ret = system "#{folder}/bin/ruby.exe", *flags, 'dig.rb'
   rm_rf folder
+  break puts 'Failed' if !ret
   mv 'dig.ri', dist
-  print "\e[u\e[0K"
+  print "\e[u\e[K"
 }
 
 Ancestors = {}

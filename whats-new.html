@@ -23,16 +23,15 @@
 </head>
 <body>
   <base target="_blank">
-  <div>Ruby version: <select id="versions"><option>1.8.7</option><option>1.9.2</option><option>1.9.3</option><option>2.0.0</option><option>2.1.3</option><option>2.1.4</option><option>2.1.5</option><option>2.1.6</option><option>2.1.7</option><option>2.1.8</option><option>2.1.9</option><option>2.2.1</option><option>2.2.2</option><option>2.2.3</option><option>2.2.4</option><option>2.2.5</option><option>2.2.6</option><option>2.3.0</option><option>2.3.1</option><option>2.3.3</option><option>2.4.1</option><option>2.4.2</option><option>2.4.3</option><option>2.4.4</option><option>2.4.5</option><option>2.5.0</option><option>2.5.1</option><option>2.5.3</option><option selected>2.6.0</option><option>2.6.1</option></select></div>
-  <output id="output">
-    <h3>Range</h3>
-    <p><span class="i">%</span></p>
-  </output>
+  <div>Ruby version: <select id="versions"></select></div>
+  <output id="output"></output>
   <script>
     (async function() {
       const select = document.getElementById('versions');
-      const json = await fetch('versions.json').then(r => r.json())
-      const accept = (v, ver) => v >= ver && v < ver + 10;
+      const json = await fetch('versions.json').then(r => r.json());
+      window.json = json;
+      console.log('window.json =', json);
+      const accept = (v, ver) => v == ver;
       const filter = ver =>
         Object.entries(json)
           .map(([k, v]) => [
@@ -47,8 +46,11 @@
               .filter(([k, v]) => (k === "_" ? accept(v, ver) : v.length > 0))
           ])
           .filter(([k, v]) => v.length > 0);
-      function l(k, c, t) {
-        return `https://ruby-doc.org/core-2.6.2/${
+      function strver(ver) {
+        return Array.from(String(ver + 100)).join('.');
+      }
+      function l(k, c, t, _) {
+        return `https://ruby-doc.org/core-${strver(_)}/${
           k.replace(/::/g,"/")
         }.html#method-${c}-${
           encodeURIComponent(t.replace(/-/g,"-2D"))
@@ -57,9 +59,7 @@
         }`;
       }
       const output = document.getElementById('output');
-      function update() {
-        let ver = +select.value.split('.').join('') - 100;
-        ver = ~~(ver / 10) * 10;
+      function refresh(ver) {
         const filtered = filter(ver);
         while (output.firstChild) output.firstChild.remove();
         for (const [k, v] of filtered) {
@@ -73,7 +73,7 @@
               const a = document.createElement('a');
               a.classList.add(kk);
               a.append(vvv);
-              a.href = l(k, kk, vvv);
+              a.href = l(k, kk, vvv, _);
               p.append(a, ', ');
             }
             if (p.lastChild) p.lastChild.remove();
@@ -81,7 +81,19 @@
           }
         }
       }
+      function update() {
+        let ver = +select.value.split('.').join('') - 100;
+        refresh(ver);
+      }
       select.addEventListener('change', update);
+      for (let i = 87; i < 200; ++i) {
+        refresh(i);
+        if (output.childElementCount > 0) {
+          const option = document.createElement('option');
+          option.textContent = Array.from(String(i + 100)).join('.');
+          select.append(option);
+        }
+      }
       update();
     })();
   </script>
