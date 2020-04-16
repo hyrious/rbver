@@ -29,7 +29,8 @@ Cache = File.exist?(TEMP_CACHE) ? (Marshal.load IO.binread TEMP_CACHE) : {}
 
 mkdir_p 'each'
 mkdir_p 'tmp'
-rb.reverse_each { |text:, href:, sha:|
+rb.reverse_each { |doc|
+  text, href, sha = doc.values_at :text, :href, :sha
   dist = "each/#{text[/\d\.\d\.\d/]}.ri"
   next if File.exist? dist
   puts "WORKING ON #{dist}"
