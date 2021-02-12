@@ -96,6 +96,13 @@
                 return isSubseq(s1.slice(0, -1), s2.slice(0, -1));
             return isSubseq(s1, s2.slice(0, -1));
         }
+        function debounce(fn, delay = 300) {
+            let timer;
+            return function(...args) {
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
         import Ky from "https://cdn.jsdelivr.net/npm/ky/index.min.js";
         (async function() {
             var json, versions, ancestors;
@@ -141,7 +148,7 @@
                 output.append(div);
             }
 
-            input.addEventListener('input', function() {
+            input.addEventListener('input', debounce(function() {
                 const text = this.value.trim();
                 if (text) {
                     for (const mod in dom) {
@@ -185,7 +192,7 @@
                     }
                     output.classList.remove('searching');
                 }
-            });
+            }));
         })();
     </script>
 </body>

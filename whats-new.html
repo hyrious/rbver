@@ -59,36 +59,38 @@
         }`;
       }
       const output = document.getElementById('output');
-      function refresh(ver) {
+      function refresh(ver, dryRun=false) {
         const filtered = filter(ver);
-        while (output.firstChild) output.firstChild.remove();
-        for (const [k, v] of filtered) {
-          const h3 = document.createElement('h3');
-          h3.append(k);
-          output.append(h3);
-          for (const [kk, vv] of v) {
-            if (kk === '_') continue;
-            const p = document.createElement('p');
-            for (const [vvv, _] of vv) {
-              const a = document.createElement('a');
-              a.classList.add(kk);
-              a.append(vvv);
-              a.href = l(k, kk, vvv, _);
-              p.append(a, ', ');
+        if (!dryRun) {
+          while (output.firstChild) output.firstChild.remove();
+          for (const [k, v] of filtered) {
+            const h3 = document.createElement('h3');
+            h3.append(k);
+            output.append(h3);
+            for (const [kk, vv] of v) {
+              if (kk === '_') continue;
+              const p = document.createElement('p');
+              for (const [vvv, _] of vv) {
+                const a = document.createElement('a');
+                a.classList.add(kk);
+                a.append(vvv);
+                a.href = l(k, kk, vvv, _);
+                p.append(a, ', ');
+              }
+              if (p.lastChild) p.lastChild.remove();
+              output.append(p)
             }
-            if (p.lastChild) p.lastChild.remove();
-            output.append(p)
           }
         }
+        return filtered.length > 0;
       }
       function update() {
         let ver = +select.value.split('.').join('') - 100;
         refresh(ver);
       }
       select.addEventListener('change', update);
-      for (let i = 87; i < 200; ++i) {
-        refresh(i);
-        if (output.childElementCount > 0) {
+      for (let i = 87; i < 300; ++i) {
+        if (refresh(i, true)) {
           const option = document.createElement('option');
           option.textContent = Array.from(String(i + 100)).join('.');
           select.append(option);

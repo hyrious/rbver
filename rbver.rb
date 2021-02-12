@@ -20,7 +20,7 @@ grbs = rbs.group_by { |e| e[:text][/Ruby \d\.\d\.\d/] }
 rb = grbs.values.map { |e| e.reject { |a| a[:text]['x64'] }
                             .sort_by { |a| a[:text] }[-1] }
 
-down = Down::Http.new # { |http| http.via('127.0.0.1', 1080) }
+down = Down::Http.new { |http| http.via('127.0.0.1', 1080) }
 percent = -> f { '%.02f%%' % (100 * f) }
 
 include FileUtils

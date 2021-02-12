@@ -12,6 +12,9 @@ def dig x=Object, v={}
       :i => x.instance_methods(false),
       :c => x.singleton_methods(false)
     }
+    if [Module, Class, Object].include? x
+      ret[:i] = (ret[:i] + x.private_instance_methods(false)).uniq
+    end
     x.constants.each { |e|
       begin
         y = dig x.const_get(e), v
