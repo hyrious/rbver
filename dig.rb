@@ -1,4 +1,4 @@
-def dig x=Object, v={}
+def dig x=Object, v={}, me=method(:dig)
   return if v.key? x
   v[x] = 1
   if x.kind_of? Module
@@ -24,8 +24,12 @@ def dig x=Object, v={}
           ret[:s][e] = y
         end
       rescue NameError
+      rescue RuntimeError
       end
     }
+    if ret[:i].include?(:dig) and x.method(:dig) == me
+      ret[:i].delete :dig
+    end
     [:s, :t, :i, :c, :a].each { |e|
       ret.delete e if ret[e].empty?
     }
