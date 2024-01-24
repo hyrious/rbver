@@ -9,7 +9,7 @@
   const j = await r.json();
   const $ = x => document.querySelector(x);
   const $$ = x => [...document.querySelectorAll(x)];
-  const klass = $('h1.class').textContent;
+  const klass = $('h1.class, h1.module').textContent;
   const c = $$('#public-class-method-details > .method-detail');
   const i = $$('#public-instance-method-details > .method-detail');
   for (const div of c) {
