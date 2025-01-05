@@ -38,4 +38,8 @@
       append(div, '.method-heading', text);
     }
   }
+  // Fix ruby-doc.org not jumping to the anchor.
+  if (location.host === 'ruby-doc.org' && location.hash) {
+    document.querySelector(location.hash)?.scrollIntoView();
+  }
 })();
