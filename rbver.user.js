@@ -10,7 +10,7 @@
   const j = await r.json();
   const $ = x => document.querySelector(x);
   const $$ = x => [...document.querySelectorAll(x)];
-  const klass = $('h1.class, h1.module').textContent;
+  const klass = $('h1.class, h1.module').textContent.trim().split(/\s+/g).pop();
   const c = $$('[id^="public-class-"] > .method-detail');
   const i = $$('[id^="public-instance-"] > .method-detail');
   const append = (div, sel, text) => {
