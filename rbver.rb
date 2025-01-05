@@ -10,7 +10,7 @@ end
 
 url = 'https://rubyinstaller.org/downloads/archives/'
 puts "GET #{url}"
-doc = Nokogiri::HTML(HTTP.via('127.0.0.1', 10809).get(url).to_s)
+doc = Nokogiri::HTML(HTTP.via('127.0.0.1', 7891).get(url).to_s)
 ul = doc.at('#archives').next_element
 lis = ul.search('li.rubyinstaller7z')
 rbs = lis.map { |li| { text: li.at('a.downloadlink').text,
@@ -20,7 +20,7 @@ grbs = rbs.group_by { |e| e[:text][/Ruby \d\.\d\.\d/] }
 rb = grbs.values.map { |e| e.reject { |a| a[:text]['x64'] }
                             .sort_by { |a| a[:text] }[-1] }
 
-down = Down::Http.new { |http| http.via('127.0.0.1', 10809) }
+down = Down::Http.new { |http| http.via('127.0.0.1', 7891) }
 percent = -> f { '%.02f%%' % (100 * f) }
 
 include FileUtils
